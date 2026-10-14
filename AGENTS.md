@@ -15,3 +15,5 @@
 - Queue is processed by the in-app `QueueWorker` (AppShell, every 20s) — no secure cron secret is available to pg_cron yet; sending runs only while a user has the app open.
 - Schedules use Brasília time (UTC-3) — single-market assumption.
 - Every app table carries `user_id` defaulting to `auth.uid()` with an own-rows RLS policy — multi-tenant isolation.
+- Brand imagery is shared through BrandLogo and page metadata through pageMeta — keeps identity consistent across screens.
+- Contacts group extraction uses GroupContactsDialog with a pure prepareGroupContacts mapper — preserves existing Connections behavior and makes deduplication testable.

@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Eraser, ListPlus, Pencil, Plus, Trash2, Upload } from "lucide-react";
+import { Eraser, ListPlus, Pencil, Plus, Trash2, Upload, UsersRound } from "lucide-react";
+import { GroupContactsDialog } from "@/components/GroupContactsDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,7 @@ function ContactsPage() {
   const [sel, setSel] = useState<Set<string>>(new Set());
   const [edit, setEdit] = useState<Partial<Contact> | null>(null);
   const [bulk, setBulk] = useState(false);
+  const [groupsOpen, setGroupsOpen] = useState(false);
   const [toList, setToList] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -88,6 +90,7 @@ function ContactsPage() {
   return (
     <div>
       <PageHeader title="Contatos" desc={`${contacts.length} contatos no CRM`}>
+        <Button variant="outline" onClick={() => setGroupsOpen(true)}><UsersRound className="mr-2 h-4 w-4" />Extrair de grupos</Button>
         <Button variant="outline" onClick={() => fileRef.current?.click()}><Upload className="mr-2 h-4 w-4" />Importar CSV</Button>
         <Button variant="outline" onClick={() => setBulk(true)}>Inserir em lote</Button>
         <Button onClick={() => setEdit({ name: "", phone: "", company: "", tags: [] })}><Plus className="mr-2 h-4 w-4" />Novo</Button>
@@ -133,6 +136,7 @@ function ContactsPage() {
       {filtered.length > 500 && <p className="mt-2 text-xs text-muted-foreground">Mostrando 500 de {filtered.length}. Use a busca para refinar.</p>}
 
       {edit && <EditDialog c={edit} onClose={() => { setEdit(null); refresh(); }} />}
+      {groupsOpen && <GroupContactsDialog onClose={() => setGroupsOpen(false)} />}
       {bulk && (
         <BulkDialog onClose={() => setBulk(false)} onSave={async (txt) => {
           await upsert(txt.split("\n").map((l) => l.trim()).filter(Boolean).map((l) => {
