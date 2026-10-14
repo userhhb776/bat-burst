@@ -60,10 +60,10 @@ function Wizard() {
   });
   const { data: instances = [] } = useQuery({ queryKey: ["instances"], queryFn: async () => (await supabase.from("instances").select("*")).data || [] });
   const { data: lists = [] } = useQuery({ queryKey: ["lists", "count"], queryFn: async () => (await supabase.from("lists").select("id, name, is_test, list_contacts(count)").order("is_test", { ascending: false })).data || [] });
-  const { data: scripts = [] } = useQuery({ queryKey: ["scripts", "full"], queryFn: async () => (await supabase.from("scripts").select("id, name, script_steps(variations, position)")).data || [] });
+  const { data: scripts = [] } = useQuery({ queryKey: ["scripts", "full"], queryFn: async () => (await supabase.from("scripts").select("id, name, script_steps(variations, position, kind, audio_urls)")).data || [] });
   const script: any = scripts.find((s) => s.id === f.script_id);
-  const minVar = script ? Math.min(...script.script_steps.map((s: any) => s.variations.length), 99) : 1;
-  const risk = computeRisk([{ ...f, minVariations: minVar }]);
+  const minVar = script ? Math.min(...script.script_steps.map((s: any) => (s.kind === "audio" ? s.audio_urls.length : s.variations.length)), 99) : 1;
+  const risk = computeRisk([{ ...f, minVariations: minVar, stepsCount: script?.script_steps.length || 1 }]);
 
   const valid = [f.name && f.instance_id, f.list_id, f.script_id, f.weekdays.length && f.end_hour > f.start_hour && f.daily_limit > 0][step];
   const num = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) => setF({ ...f, [k]: Math.max(0, Number(e.target.value)) });
@@ -90,7 +90,7 @@ function Wizard() {
   return (
     <div className="mx-auto max-w-4xl">
       <PageHeader title="Nova campanha" />
-      <ol className="mb-8 grid grid-cols-4 gap-2">
+      <ol className="mb-6 grid grid-cols-4 gap-2 sm:mb-8">
         {steps.map((s, i) => (
           <li key={s} className="flex flex-col gap-2">
             <div className={cn("h-1 rounded-full", i <= step ? "bg-primary" : "bg-muted")} />
@@ -101,7 +101,7 @@ function Wizard() {
         ))}
       </ol>
 
-      <div className="rounded-2xl border border-border bg-card/60 p-6">
+      <div className="rounded-2xl border border-border bg-card/60 p-4 sm:p-6">
         {step === 0 && (
           <div className="space-y-5">
             <div className="space-y-1.5"><Label>Nome da campanha</Label><Input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder="Ex: Reativação clientes outubro" /></div>
@@ -125,7 +125,7 @@ function Wizard() {
                 <Card id={l.id} title={l.name} sub={`${l.list_contacts?.[0]?.count ?? 0} contatos${l.is_test ? " · validação prévia" : ""}`} active={f.list_id === l.id} />
               </div>
             ))}
-            {!lists.length && <p className="text-sm text-muted-foreground">Crie uma lista ou o PACK - TESTE na tela Listas.</p>}
+            {!lists.length && <p className="text-sm text-muted-foreground">Crie uma lista na tela Listas.</p>}
           </div>
         )}
         {step === 2 && (
@@ -181,7 +181,7 @@ function Wizard() {
         )}
       </div>
 
-      <div className="mt-6 flex justify-between">
+      <div className="sticky bottom-20 mt-6 flex justify-between gap-2 rounded-xl bg-background/90 py-2 backdrop-blur md:static md:bg-transparent">
         <Button variant="ghost" disabled={step === 0} onClick={() => setStep(step - 1)}>Voltar</Button>
         {step < 3 ? (
           <Button disabled={!valid} onClick={() => setStep(step + 1)}>Continuar</Button>

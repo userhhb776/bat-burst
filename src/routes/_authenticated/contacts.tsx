@@ -9,7 +9,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -44,7 +43,6 @@ function ContactsPage() {
   const [q, setQ] = useState("");
   const [sel, setSel] = useState<Set<string>>(new Set());
   const [edit, setEdit] = useState<Partial<Contact> | null>(null);
-  const [bulk, setBulk] = useState(false);
   const [groupsOpen, setGroupsOpen] = useState(false);
   const [toList, setToList] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -93,13 +91,12 @@ function ContactsPage() {
       <PageHeader title="Contatos" desc={`${contacts.length} contatos no CRM`}>
         <Button variant="outline" onClick={() => setGroupsOpen(true)}><UsersRound className="mr-2 h-4 w-4" />Extrair de grupos</Button>
         <Button variant="outline" onClick={() => fileRef.current?.click()}><Upload className="mr-2 h-4 w-4" />Importar CSV</Button>
-        <Button variant="outline" onClick={() => setBulk(true)}>Inserir em lote</Button>
         <Button onClick={() => setEdit({ name: "", phone: "", company: "", tags: [] })}><Plus className="mr-2 h-4 w-4" />Novo</Button>
         <input ref={fileRef} type="file" accept=".csv,text/csv" hidden onChange={(e) => e.target.files?.[0] && onCsv(e.target.files[0])} />
       </PageHeader>
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <Input placeholder="Buscar por nome, número, empresa ou tag" value={q} onChange={(e) => setQ(e.target.value)} className="max-w-sm" />
+        <Input placeholder="Buscar por nome, número, empresa ou tag" value={q} onChange={(e) => setQ(e.target.value)} className="w-full sm:max-w-sm" />
         <Button variant="ghost" size="sm" onClick={() => removeIds(contacts.filter((c) => !c.is_valid).map((c) => c.id))}><Eraser className="mr-1.5 h-4 w-4" />Remover inválidos</Button>
         <Button variant="ghost" size="sm" onClick={() => removeIds(contacts.filter((c) => c.is_admin).map((c) => c.id))}><Eraser className="mr-1.5 h-4 w-4" />Remover administradores</Button>
         {sel.size > 0 && (
@@ -110,7 +107,23 @@ function ContactsPage() {
         )}
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-border bg-card">
+      <div className="space-y-2 md:hidden">
+        <label className="flex items-center gap-2 px-1 text-xs text-muted-foreground"><Checkbox checked={allSel} onCheckedChange={(c) => setSel(c ? new Set(filtered.map((x) => x.id)) : new Set())} />Selecionar todos</label>
+        {filtered.slice(0, 300).map((c) => (
+          <div key={c.id} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border border-border bg-card p-3">
+            <Checkbox checked={sel.has(c.id)} onCheckedChange={(v) => { const s = new Set(sel); v ? s.add(c.id) : s.delete(c.id); setSel(s); }} />
+            <div className="min-w-0">
+              <div className="truncate text-sm font-medium">{c.name || "—"}{c.is_admin && <span className="ml-2 rounded bg-warning/15 px-1.5 text-xs text-warning">admin</span>}</div>
+              <div className={`truncate text-xs tabular-nums ${c.is_valid ? "text-muted-foreground" : "text-destructive line-through"}`}>{formatPhone(c.phone)}{c.company && ` · ${c.company}`}</div>
+              {c.tags.length > 0 && <div className="mt-1 flex flex-wrap gap-1">{c.tags.slice(0, 3).map((t) => <span key={t} className="rounded bg-secondary px-1.5 py-0.5 text-[10px]">{t}</span>)}</div>}
+            </div>
+            <Button size="icon" variant="ghost" onClick={() => setEdit(c)}><Pencil className="h-4 w-4" /></Button>
+          </div>
+        ))}
+        {!filtered.length && <p className="p-6 text-center text-sm text-muted-foreground">Nenhum contato.</p>}
+      </div>
+
+      <div className="hidden overflow-x-auto rounded-xl border border-border bg-card md:block">
         <table className="w-full text-sm">
           <thead className="border-b border-border text-left text-xs uppercase text-muted-foreground">
             <tr>
@@ -138,15 +151,6 @@ function ContactsPage() {
 
       {edit && <EditDialog c={edit} onClose={() => { setEdit(null); refresh(); }} />}
       {groupsOpen && <GroupContactsDialog onClose={() => setGroupsOpen(false)} />}
-      {bulk && (
-        <BulkDialog onClose={() => setBulk(false)} onSave={async (txt) => {
-          await upsert(txt.split("\n").map((l) => l.trim()).filter(Boolean).map((l) => {
-            const p = l.split(/[;,\t]/);
-            return p.length === 1 ? toRow("", p[0] ?? "") : toRow(p[0] ?? "", p[1] ?? "", p[2] ?? "");
-          }));
-          setBulk(false);
-        }} />
-      )}
       {toList && (
         <Dialog open onOpenChange={(o) => !o && setToList(false)}>
           <DialogContent>
@@ -190,20 +194,6 @@ function EditDialog({ c, onClose }: { c: Partial<Contact>; onClose: () => void }
           <div className="space-y-1.5"><Label>Tags (separadas por vírgula)</Label><Input value={f.tags} onChange={(e) => setF({ ...f, tags: e.target.value })} /></div>
           <Button className="w-full" onClick={save}>Salvar</Button>
         </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function BulkDialog({ onClose, onSave }: { onClose: () => void; onSave: (t: string) => void }) {
-  const [t, setT] = useState("");
-  return (
-    <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent>
-        <DialogHeader><DialogTitle>Inserir em lote</DialogTitle></DialogHeader>
-        <p className="text-sm text-muted-foreground">Um por linha: <code>Nome; Telefone; Empresa</code> ou apenas o número.</p>
-        <Textarea rows={10} value={t} onChange={(e) => setT(e.target.value)} placeholder={"Maria Silva; 11999998888; Loja X\n21988887777"} />
-        <Button onClick={() => onSave(t)}>Salvar contatos</Button>
       </DialogContent>
     </Dialog>
   );
