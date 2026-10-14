@@ -53,7 +53,7 @@ export function GroupContactsDialog({ onClose }: { onClose: () => void }) {
       toast.success(`${added} contatos extraídos${rows.length > added ? ` · ${rows.length - added} já cadastrados` : ""}`);
       onClose();
     } catch (error) {
-      toast.error(`${added ? `${added} contatos salvos. ` : """"}${error instanceof Error ? error.message : "Não foi possível salvar. Tente novamente."}`);
+      toast.error(`${added ? `${added} contatos salvos. ` : ""}${error instanceof Error ? error.message : "Não foi possível salvar. Tente novamente."}`);
     } finally {
       setBusy(false);
       await qc.invalidateQueries({ queryKey: ["contacts"] });
