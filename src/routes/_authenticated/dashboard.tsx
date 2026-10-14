@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Area, AreaChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { CalendarClock, CheckCheck, Clock, MessageCircleReply, RefreshCw, Send, Smartphone, Users, XCircle, Zap } from "lucide-react";
+import { CheckCheck, Clock, MessageCircleReply, RefreshCw, Send, Smartphone, Users, XCircle, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { processQueue, refreshInstances, syncReplies } from "@/lib/crm.functions";
 import { PageHeader, StatusBadge } from "@/components/AppShell";
@@ -36,8 +36,7 @@ function Dashboard() {
       const { data: q } = await supabase.from("queue_messages").select("status, sent_at, created_at, replied, replied_at, contact_name, phone, campaign_id").limit(50000);
       const { data: camps } = await supabase.from("campaigns").select("*, scripts(script_steps(variations, kind, audio_urls))").in("status", ["running", "paused"]);
       const { data: insts } = await supabase.from("instances").select("id, name, status");
-      const { data: notes } = await supabase.from("notes").select("id, title, due_at, done").not("due_at", "is", null).eq("done", false).gte("due_at", new Date(Date.now() - 3600_000).toISOString()).order("due_at").limit(4);
-      return { contacts: contacts || 0, q: q || [], camps: camps || [], insts: insts || [], notes: notes || [] };
+      return { contacts: contacts || 0, q: q || [], camps: camps || [], insts: insts || [] };
     },
   });
   useEffect(() => {
@@ -80,7 +79,6 @@ function Dashboard() {
     { name: "Falhas", value: failed, color: "var(--destructive)" },
     { name: "Canceladas", value: cancelled, color: "var(--muted-foreground)" },
   ].filter((p) => p.value);
-  const recent = q.filter((m) => m.status === "sent" && m.sent_at).sort((a, b) => b.sent_at!.localeCompare(a.sent_at!)).slice(0, 6);
 
   const syncAll = async () => {
     setSyncing(true);
@@ -171,7 +169,7 @@ function Dashboard() {
         <RiskGauge risk={risk} />
       </div>
 
-      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-5 md:grid-cols-2">
         <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
           <h3 className="mb-2 font-semibold">Status da fila</h3>
           <div className="relative h-48">
@@ -216,29 +214,6 @@ function Dashboard() {
           </div>
         </div>
 
-        <div className="space-y-5 md:col-span-2 lg:col-span-1">
-          <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
-            <h3 className="mb-3 font-semibold">Últimos envios</h3>
-            <div className="space-y-2">
-              {recent.map((m, i) => (
-                <div key={i} className="flex items-center justify-between gap-2 text-sm">
-                  <span className="flex min-w-0 items-center gap-2"><span className="h-1.5 w-1.5 shrink-0 rounded-full bg-success" /><span className="truncate">{m.contact_name || m.phone}</span>{m.replied && <MessageCircleReply className="h-3.5 w-3.5 shrink-0 text-primary" />}</span>
-                  <span className="shrink-0 text-[11px] text-muted-foreground">{new Date(m.sent_at!).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
-                </div>
-              ))}
-              {!recent.length && <p className="text-sm text-muted-foreground">Nenhum envio ainda.</p>}
-            </div>
-          </div>
-          <div className="rounded-xl border border-primary/30 bg-card p-4 sm:p-5">
-            <div className="mb-3 flex items-center justify-between"><h3 className="flex items-center gap-2 font-semibold"><CalendarClock className="h-4 w-4 text-primary" />Agenda</h3><Link to="/notes" className="text-xs text-primary">Abrir</Link></div>
-            <div className="space-y-2">
-              {(data?.notes || []).map((n: any) => (
-                <div key={n.id} className="flex items-center justify-between gap-2 text-sm"><span className="truncate">{n.title || "Sem título"}</span><span className="shrink-0 text-[11px] text-primary">{new Date(n.due_at).toLocaleString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</span></div>
-              ))}
-              {!data?.notes.length && <p className="text-sm text-muted-foreground">Sem compromissos próximos.</p>}
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
