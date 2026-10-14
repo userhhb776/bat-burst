@@ -17,6 +17,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedInstancesRouteImport } from './routes/_authenticated/instances'
 import { Route as AuthenticatedListsRouteImport } from './routes/_authenticated/lists'
 import { Route as AuthenticatedLogsRouteImport } from './routes/_authenticated/logs'
+import { Route as AuthenticatedNotesRouteImport } from './routes/_authenticated/notes'
 import { Route as AuthenticatedScriptsRouteImport } from './routes/_authenticated/scripts'
 import { Route as AuthenticatedCampaignsIndexRouteImport } from './routes/_authenticated/campaigns.index'
 import { Route as AuthenticatedCampaignsNewRouteImport } from './routes/_authenticated/campaigns.new'
@@ -60,6 +61,11 @@ const AuthenticatedLogsRoute = AuthenticatedLogsRouteImport.update({
   path: '/logs',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedNotesRoute = AuthenticatedNotesRouteImport.update({
+  id: '/notes',
+  path: '/notes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedScriptsRoute = AuthenticatedScriptsRouteImport.update({
   id: '/scripts',
   path: '/scripts',
@@ -86,6 +92,7 @@ export interface FileRoutesByFullPath {
   '/instances': typeof AuthenticatedInstancesRoute
   '/lists': typeof AuthenticatedListsRoute
   '/logs': typeof AuthenticatedLogsRoute
+  '/notes': typeof AuthenticatedNotesRoute
   '/scripts': typeof AuthenticatedScriptsRoute
   '/campaigns/new': typeof AuthenticatedCampaignsNewRoute
   '/campaigns/': typeof AuthenticatedCampaignsIndexRoute
@@ -98,6 +105,7 @@ export interface FileRoutesByTo {
   '/instances': typeof AuthenticatedInstancesRoute
   '/lists': typeof AuthenticatedListsRoute
   '/logs': typeof AuthenticatedLogsRoute
+  '/notes': typeof AuthenticatedNotesRoute
   '/scripts': typeof AuthenticatedScriptsRoute
   '/campaigns/new': typeof AuthenticatedCampaignsNewRoute
   '/campaigns': typeof AuthenticatedCampaignsIndexRoute
@@ -112,6 +120,7 @@ export interface FileRoutesById {
   '/_authenticated/instances': typeof AuthenticatedInstancesRoute
   '/_authenticated/lists': typeof AuthenticatedListsRoute
   '/_authenticated/logs': typeof AuthenticatedLogsRoute
+  '/_authenticated/notes': typeof AuthenticatedNotesRoute
   '/_authenticated/scripts': typeof AuthenticatedScriptsRoute
   '/_authenticated/campaigns/new': typeof AuthenticatedCampaignsNewRoute
   '/_authenticated/campaigns/': typeof AuthenticatedCampaignsIndexRoute
@@ -126,6 +135,7 @@ export interface FileRouteTypes {
     | '/instances'
     | '/lists'
     | '/logs'
+    | '/notes'
     | '/scripts'
     | '/campaigns/new'
     | '/campaigns/'
@@ -138,6 +148,7 @@ export interface FileRouteTypes {
     | '/instances'
     | '/lists'
     | '/logs'
+    | '/notes'
     | '/scripts'
     | '/campaigns/new'
     | '/campaigns'
@@ -151,6 +162,7 @@ export interface FileRouteTypes {
     | '/_authenticated/instances'
     | '/_authenticated/lists'
     | '/_authenticated/logs'
+    | '/_authenticated/notes'
     | '/_authenticated/scripts'
     | '/_authenticated/campaigns/new'
     | '/_authenticated/campaigns/'
@@ -220,6 +232,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLogsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/notes': {
+      id: '/_authenticated/notes'
+      path: '/notes'
+      fullPath: '/notes'
+      preLoaderRoute: typeof AuthenticatedNotesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/scripts': {
       id: '/_authenticated/scripts'
       path: '/scripts'
@@ -250,6 +269,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedInstancesRoute: typeof AuthenticatedInstancesRoute
   AuthenticatedListsRoute: typeof AuthenticatedListsRoute
   AuthenticatedLogsRoute: typeof AuthenticatedLogsRoute
+  AuthenticatedNotesRoute: typeof AuthenticatedNotesRoute
   AuthenticatedScriptsRoute: typeof AuthenticatedScriptsRoute
   AuthenticatedCampaignsNewRoute: typeof AuthenticatedCampaignsNewRoute
   AuthenticatedCampaignsIndexRoute: typeof AuthenticatedCampaignsIndexRoute
@@ -261,6 +281,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedInstancesRoute: AuthenticatedInstancesRoute,
   AuthenticatedListsRoute: AuthenticatedListsRoute,
   AuthenticatedLogsRoute: AuthenticatedLogsRoute,
+  AuthenticatedNotesRoute: AuthenticatedNotesRoute,
   AuthenticatedScriptsRoute: AuthenticatedScriptsRoute,
   AuthenticatedCampaignsNewRoute: AuthenticatedCampaignsNewRoute,
   AuthenticatedCampaignsIndexRoute: AuthenticatedCampaignsIndexRoute,
