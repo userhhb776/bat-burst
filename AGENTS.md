@@ -10,7 +10,7 @@
 <!-- LOVABLE:END -->
 
 ## Architecture rules
-- All Evolution API calls go through `src/server/evolution.server.ts` from authenticated server fns in `src/server/crm.functions.ts` — keeps the API key server-only.
+- All Evolution API calls go through `src/server/evolution.server.ts` from authenticated server fns in `src/lib/crm.functions.ts` — keeps the API key server-only.
 - Campaign queue is precomputed at launch (`buildSchedule` in `src/lib/crm.ts`) into `queue_messages`; sending only picks due rows — makes the queue resilient and auditable.
 - Queue is processed by the in-app `QueueWorker` (AppShell, every 20s) — no secure cron secret is available to pg_cron yet; sending runs only while a user has the app open.
 - Schedules use Brasília time (UTC-3) — single-market assumption.
