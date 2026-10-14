@@ -1,3 +1,4 @@
+import { pageMeta } from "@/lib/page-meta";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Ban, Pause, Play, Plus } from "lucide-react";
@@ -7,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 
 export const Route = createFileRoute("/_authenticated/campaigns/")({
-  head: () => ({ meta: [{ title: "Campanhas — Cadência" }] }),
+  head: () => pageMeta("Campanhas", "Acompanhe e gerencie campanhas cadenciadas de WhatsApp no Bat Burst 7.5."),
   component: CampaignsPage,
 });
 

@@ -1,3 +1,4 @@
+import { pageMeta } from "@/lib/page-meta";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -16,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { formatPhone, normalizePhone, parseCsv } from "@/lib/crm";
 
 export const Route = createFileRoute("/_authenticated/contacts")({
-  head: () => ({ meta: [{ title: "Contatos — Cadência" }] }),
+  head: () => pageMeta("Contatos", "Organize clientes e extraia contatos dos grupos do seu WhatsApp no Bat Burst 7.5."),
   component: ContactsPage,
 });
 

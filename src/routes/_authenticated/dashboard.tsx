@@ -1,3 +1,4 @@
+import { pageMeta } from "@/lib/page-meta";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -13,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { computeRisk } from "@/lib/crm";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard — Cadência" }] }),
+  head: () => pageMeta("Dashboard", "Acompanhe contatos, mensagens enviadas, respostas e campanhas no Bat Burst 7.5."),
   component: Dashboard,
 });
 

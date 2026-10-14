@@ -1,3 +1,4 @@
+import { pageMeta } from "@/lib/page-meta";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -11,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { formatPhone, normalizePhone } from "@/lib/crm";
 
 export const Route = createFileRoute("/_authenticated/lists")({
-  head: () => ({ meta: [{ title: "Listas e segmentos — Cadência" }] }),
+  head: () => pageMeta("Listas e segmentos", "Organize listas de clientes e públicos de campanhas no Bat Burst 7.5."),
   component: ListsPage,
 });
 
