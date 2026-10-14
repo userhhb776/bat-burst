@@ -153,8 +153,8 @@ export function computeRisk(campaigns: RiskInput[]): { level: RiskLevel; score: 
     else if (msgsDay >= 250) (s += 34), r.push(`${msgsDay} mensagens/dia — volume alto`);
     else if (msgsDay >= 120) (s += 20), r.push(`${msgsDay} mensagens/dia — volume moderado`);
     else if (msgsDay >= 60) (s += 8);
-    if (c.daily_limit >= 1000) (s += 30), r.push(`Limite diário de ${c.daily_limit} contatos — muito acima do seguro (até ~80)`);
-    else if (c.daily_limit >= 300) (s += 20), r.push(`Limite diário de ${c.daily_limit} contatos — acima do recomendado`);
+    if (c.daily_limit >= 1000) (s += 45), r.push(`Limite diário de ${c.daily_limit} contatos — muito acima do seguro (até ~80)`);
+    else if (c.daily_limit >= 300) (s += 25), r.push(`Limite diário de ${c.daily_limit} contatos — acima do recomendado`);
     else if (c.daily_limit >= 150) (s += 10), r.push(`Limite diário de ${c.daily_limit} contatos`);
     if (c.daily_limit > capacity) r.push(`O horário só comporta ~${capacity} contatos/dia com esse intervalo`);
 
