@@ -8,7 +8,7 @@ export function normalizePhone(raw: string): { phone: string; valid: boolean } {
   // Brazilian number without country code (DDD + number)
   if (d.length === 10 || d.length === 11) d = "55" + d;
   // BR mobile missing the 9th digit: 55 + DDD + 8 digits starting 6-9
-  if (d.length === 12 && d.startsWith("55") && /[6-9]/.test(d[4])) d = d.slice(0, 4) + "9" + d.slice(4);
+  if (d.length === 12 && d.startsWith("55") && /[6-9]/.test(d[4] ?? "")) d = d.slice(0, 4) + "9" + d.slice(4);
   const valid = d.length >= 11 && d.length <= 15;
   return { phone: d, valid };
 }
@@ -25,7 +25,7 @@ export function renderMessage(template: string, c: ContactVars) {
   const first = (c.name || "").trim().split(/\s+/)[0] || "";
   let out = template.replace(/\{([^{}]*\|[^{}]*)\}/g, (_, opts: string) => {
     const parts = opts.split("|");
-    return parts[Math.floor(Math.random() * parts.length)];
+    return parts[Math.floor(Math.random() * parts.length)] ?? "";
   });
   out = out
     .replace(/\{nome\}/gi, c.name || "")
@@ -43,9 +43,9 @@ export function createBalancedPicker(count: number) {
     bag = Array.from({ length: count }, (_, i) => i);
     for (let i = bag.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [bag[i], bag[j]] = [bag[j], bag[i]];
+      [bag[i], bag[j]] = [bag[j]!, bag[i]!];
     }
-    if (count > 1 && bag[bag.length - 1] === last) [bag[0], bag[bag.length - 1]] = [bag[bag.length - 1], bag[0]];
+    if (count > 1 && bag[bag.length - 1] === last) [bag[0], bag[bag.length - 1]] = [bag[bag.length - 1]!, bag[0]!];
   };
   return () => {
     if (count <= 1) return 0;
@@ -143,7 +143,8 @@ export function computeRisk(
 
 export function parseCsv(text: string): string[][] {
   const rows: string[][] = [];
-  const sep = (text.split("\n")[0].match(/;/g)?.length || 0) > (text.split("\n")[0].match(/,/g)?.length || 0) ? ";" : ",";
+  const first = text.split("\n")[0] ?? "";
+  const sep = (first.match(/;/g)?.length || 0) > (first.match(/,/g)?.length || 0) ? ";" : ",";
   let row: string[] = [];
   let cur = "";
   let q = false;

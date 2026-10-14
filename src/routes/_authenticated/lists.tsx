@@ -29,12 +29,12 @@ function ListsPage() {
 
   const createTestPack = async () => {
     const nums = testNums.split(/[\n,;]/).map((n) => normalizePhone(n)).filter((n) => n.valid);
-    if (!nums.length) return toast.error("Informe ao menos um número válido");
+    if (!nums.length) { toast.error("Informe ao menos um número válido"); return; }
     const { data: cs, error } = await supabase
       .from("contacts")
       .upsert(nums.map((n) => ({ phone: n.phone, name: "Teste", tags: ["teste"], source: "teste" })), { onConflict: "user_id,phone" })
       .select("id");
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     let list = lists.find((l) => l.is_test);
     if (!list) {
       const r = await supabase.from("lists").insert({ name: "PACK - TESTE", is_test: true }).select().single();

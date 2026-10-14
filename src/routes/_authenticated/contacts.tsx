@@ -57,7 +57,7 @@ function ContactsPage() {
     const clean = rows.filter((r) => r.phone && !seen.has(r.phone) && seen.add(r.phone));
     for (let i = 0; i < clean.length; i += 500) {
       const { error } = await supabase.from("contacts").upsert(clean.slice(i, i + 500), { onConflict: "user_id,phone" });
-      if (error) return toast.error(error.message);
+      if (error) { toast.error(error.message); return; }
     }
     toast.success(`${clean.length} contatos salvos`);
     refresh();
@@ -66,7 +66,7 @@ function ContactsPage() {
   const onCsv = async (f: File) => {
     const rows = parseCsv(await f.text());
     if (!rows.length) return;
-    const header = rows[0].map((h) => h.toLowerCase().trim());
+    const header = rows[0]!.map((h) => h.toLowerCase().trim());
     const idx = (keys: string[]) => header.findIndex((h) => keys.some((k) => h.includes(k)));
     let iName = idx(["nome", "name"]), iPhone = idx(["whats", "telefone", "phone", "celular", "numero", "número"]);
     const iComp = idx(["empresa", "company", "origem"]), iTags = idx(["tag"]);
@@ -76,7 +76,7 @@ function ContactsPage() {
   };
 
   const removeIds = async (ids: string[]) => {
-    if (!ids.length) return toast.info("Nada para remover");
+    if (!ids.length) { toast.info("Nada para remover"); return; }
     if (!confirm(`Remover ${ids.length} contatos?`)) return;
     for (let i = 0; i < ids.length; i += 200) await supabase.from("contacts").delete().in("id", ids.slice(i, i + 200));
     setSel(new Set());
@@ -137,7 +137,7 @@ function ContactsPage() {
         <BulkDialog onClose={() => setBulk(false)} onSave={async (txt) => {
           await upsert(txt.split("\n").map((l) => l.trim()).filter(Boolean).map((l) => {
             const p = l.split(/[;,\t]/);
-            return p.length === 1 ? toRow("", p[0]) : toRow(p[0], p[1], p[2] || "");
+            return p.length === 1 ? toRow("", p[0] ?? "") : toRow(p[0] ?? "", p[1] ?? "", p[2] ?? "");
           }));
           setBulk(false);
         }} />
@@ -168,7 +168,7 @@ function EditDialog({ c, onClose }: { c: Partial<Contact>; onClose: () => void }
   const save = async () => {
     const row = { ...toRow(f.name, f.phone, f.company, f.tags.split(",").map((t) => t.trim()).filter(Boolean)), source: c.source || "manual" };
     const { error } = c.id ? await supabase.from("contacts").update(row).eq("id", c.id) : await supabase.from("contacts").upsert(row, { onConflict: "user_id,phone" });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     onClose();
   };
   return (

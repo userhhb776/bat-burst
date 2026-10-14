@@ -111,7 +111,7 @@ export const fetchGroups = createServerFn({ method: "POST" })
         .map((p: any) => {
           const jid: string = p.phoneNumber || p.jid || p.id || "";
           return {
-            phone: jid.includes("@lid") ? "" : jid.split("@")[0].replace(/\D/g, ""),
+            phone: jid.includes("@lid") ? "" : (jid.split("@")[0] ?? "").replace(/\D/g, ""),
             admin: !!p.admin,
             name: String(p.name ?? p.pushName ?? p.notify ?? ""),
           };
@@ -150,7 +150,7 @@ export const startCampaign = createServerFn({ method: "POST" })
     const pickers = usable.map((v) => createBalancedPicker(v.length));
     const plan = buildSchedule(contacts, usable.length, cad);
     const rows = plan.map(({ contact, step, at }) => {
-      const vi = pickers[step]();
+      const vi = pickers[step]!();
       return {
         user_id: context.userId,
         campaign_id: camp.id,
@@ -159,7 +159,7 @@ export const startCampaign = createServerFn({ method: "POST" })
         contact_name: contact.name,
         step_position: step,
         variation_index: vi,
-        content: renderMessage(usable[step][vi], contact),
+        content: renderMessage(usable[step]![vi] ?? "", contact),
         scheduled_at: at.toISOString(),
       };
     });

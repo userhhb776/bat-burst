@@ -139,7 +139,7 @@ function ConnectDialog({ inst, onClose }: { inst: Inst; onClose: () => void }) {
   const [status, setStatus] = useState("connecting");
   const load = async (n?: string) => {
     try {
-      const r = await connect({ data: { id: inst.id, number: n } });
+      const r = await connect({ data: n ? { id: inst.id, number: n } : { id: inst.id } });
       setQr(r.base64);
       setCode(r.pairingCode);
     } catch (e: any) {
@@ -205,7 +205,7 @@ function GroupsDialog({ inst, onClose }: { inst: Inst; onClose: () => void }) {
       .map((p) => ({ phone: p.phone, name: p.name, company: p.group, source: "grupo", is_admin: p.admin, tags: ["grupo"] }));
     const { error } = await supabase.from("contacts").upsert(rows, { onConflict: "user_id,phone", ignoreDuplicates: true });
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success(`${rows.length} contatos sincronizados para o CRM`);
     qc.invalidateQueries({ queryKey: ["contacts"] });
     onClose();
