@@ -3,11 +3,13 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  LayoutDashboard, Smartphone, Users, ListChecks, MessageSquareText, Send, ScrollText, LogOut, Menu, X, Zap,
+  LayoutDashboard, Smartphone, Users, ListChecks, MessageSquareText, Send, ScrollText, LogOut, Menu, X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { processQueue } from "@/lib/crm.functions";
 import { cn } from "@/lib/utils";
+import { BrandLogo } from "@/components/BrandLogo";
+import { Button } from "@/components/ui/button";
 
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -57,7 +59,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           to={n.to}
           onClick={() => setOpen(false)}
           className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-          activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground font-medium" }}
+          activeProps={{ className: "bg-sidebar-accent text-primary font-medium border-l-2 border-primary" }}
         >
           <n.icon className="h-4 w-4" />
           {n.label}
@@ -66,12 +68,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     </nav>
   );
   const Brand = (
-    <div className="flex items-center gap-2 px-2">
-      <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground">
-        <Zap className="h-4 w-4" />
-      </div>
-      <span className="font-display text-lg font-semibold">Cadência</span>
-    </div>
+    <div className="border-b border-sidebar-border pb-4"><BrandLogo className="w-52" /></div>
   );
   const Footer = (
     <div className="space-y-3 border-t border-sidebar-border pt-4">
@@ -79,7 +76,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <span className="h-2 w-2 animate-pulse rounded-full bg-success" />
         Motor de envio ativo {lastTick && `· ${lastTick}`}
       </div>
-      <button
+      <Button variant="ghost"
         onClick={async () => {
           await supabase.auth.signOut();
           navigate({ to: "/auth" });
@@ -87,7 +84,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
       >
         <LogOut className="h-4 w-4" /> Sair
-      </button>
+      </Button>
     </div>
   );
   return (
@@ -100,9 +97,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center justify-between border-b border-border bg-sidebar px-4 py-3 md:hidden">
           {Brand}
-          <button onClick={() => setOpen(true)} aria-label="Menu">
+          <Button variant="ghost" size="icon" onClick={() => setOpen(true)} aria-label="Menu">
             <Menu className="h-5 w-5" />
-          </button>
+          </Button>
         </header>
         <main className="mx-auto w-full max-w-7xl flex-1 p-4 md:p-8">{children}</main>
       </div>
@@ -112,7 +109,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               {Brand}
-              <button onClick={() => setOpen(false)} aria-label="Fechar"><X className="h-5 w-5" /></button>
+              <Button variant="ghost" size="icon" onClick={() => setOpen(false)} aria-label="Fechar"><X className="h-5 w-5" /></Button>
             </div>
             {Nav}
           </div>

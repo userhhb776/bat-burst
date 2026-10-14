@@ -1,13 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Gauge, Shuffle, Smartphone, Users, Zap } from "lucide-react";
+import { Gauge, Shuffle, Smartphone, Users } from "lucide-react";
+import { BrandLogo } from "@/components/BrandLogo";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Cadência — CRM e disparo cadenciado para WhatsApp" },
+      { title: "Bat Burst 7.5 — CRM e disparo cadenciado para WhatsApp" },
       { name: "description", content: "Conecte seu WhatsApp, organize contatos e dispare funis com variações anti-spam e cadência segura." },
-      { property: "og:title", content: "Cadência — CRM e disparo cadenciado para WhatsApp" },
+      { property: "og:title", content: "Bat Burst 7.5 — CRM e disparo cadenciado para WhatsApp" },
       { property: "og:description", content: "Funis de mensagens, variações anti-spam e termômetro de risco em um só painel." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -28,15 +29,14 @@ function Index() {
     <div className="mx-auto flex min-h-screen max-w-6xl flex-col px-6">
       <header className="flex items-center justify-between py-6">
         <div className="flex items-center gap-2">
-          <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground"><Zap className="h-4 w-4" /></div>
-          <span className="font-display text-lg font-semibold">Cadência</span>
+          <BrandLogo />
         </div>
         <Button asChild variant="outline"><Link to="/auth">Entrar</Link></Button>
       </header>
       <section className="flex flex-1 flex-col justify-center py-16">
         <p className="text-sm font-medium uppercase tracking-widest text-primary">CRM + automação para WhatsApp</p>
         <h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-tight md:text-6xl">
-          Disparos que parecem conversas. Cadência que protege seu número.
+          Bat Burst 7.5
         </h1>
         <p className="mt-6 max-w-xl text-lg text-muted-foreground">
           Organize contatos, monte funis com variações de texto e deixe o motor enviar no ritmo certo.

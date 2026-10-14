@@ -1,3 +1,4 @@
+import { pageMeta } from "@/lib/page-meta";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -12,7 +13,7 @@ import { renderMessage } from "@/lib/crm";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/scripts")({
-  head: () => ({ meta: [{ title: "Scripts e variações — Cadência" }] }),
+  head: () => pageMeta("Scripts e variações", "Prepare mensagens e variações para suas campanhas no Bat Burst 7.5."),
   component: ScriptsPage,
 });
 

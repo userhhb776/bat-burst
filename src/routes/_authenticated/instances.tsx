@@ -1,3 +1,4 @@
+import { pageMeta } from "@/lib/page-meta";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -16,7 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { formatPhone, normalizePhone } from "@/lib/crm";
 
 export const Route = createFileRoute("/_authenticated/instances")({
-  head: () => ({ meta: [{ title: "Conexões WhatsApp — Cadência" }] }),
+  head: () => pageMeta("Conexões WhatsApp", "Gerencie conexões de WhatsApp por QR Code e pareamento no Bat Burst 7.5."),
   component: InstancesPage,
 });
 

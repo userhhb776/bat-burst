@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Zap } from "lucide-react";
+import { BrandLogo } from "@/components/BrandLogo";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
@@ -11,10 +11,10 @@ import { Label } from "@/components/ui/label";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Entrar — Cadência" },
-      { name: "description", content: "Acesse sua conta do CRM Cadência para WhatsApp." },
-      { property: "og:title", content: "Entrar — Cadência" },
-      { property: "og:description", content: "Acesse sua conta do CRM Cadência para WhatsApp." },
+      { title: "Entrar — Bat Burst 7.5" },
+      { name: "description", content: "Acesse sua conta do CRM Bat Burst 7.5 para WhatsApp." },
+      { property: "og:title", content: "Entrar — Bat Burst 7.5" },
+      { property: "og:description", content: "Acesse sua conta do CRM Bat Burst 7.5 para WhatsApp." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -58,8 +58,7 @@ function AuthPage() {
     <div className="grid min-h-screen place-items-center p-4">
       <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-8 shadow-2xl">
         <div className="mb-6 flex items-center gap-2">
-          <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-primary-foreground"><Zap className="h-4 w-4" /></div>
-          <span className="font-display text-xl font-semibold">Cadência</span>
+          <BrandLogo className="w-full" />
         </div>
         <h1 className="text-xl font-semibold">{mode === "login" ? "Entrar na sua conta" : "Criar conta"}</h1>
         <form onSubmit={submit} className="mt-6 space-y-4">

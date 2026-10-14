@@ -1,3 +1,4 @@
+import { pageMeta } from "@/lib/page-meta";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -17,7 +18,7 @@ import { RiskGauge } from "@/components/RiskGauge";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/campaigns/new")({
-  head: () => ({ meta: [{ title: "Nova campanha — Cadência" }] }),
+  head: () => pageMeta("Nova campanha", "Configure público, mensagens e horários de uma campanha no Bat Burst 7.5."),
   component: Wizard,
 });
 
