@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Smartphone, Users, ListChecks, MessageSquareText, Send, ScrollText, LogOut, Menu, X, Zap,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { processQueue } from "@/server/crm.functions";
+import { processQueue } from "@/lib/crm.functions";
 import { cn } from "@/lib/utils";
 
 const nav = [

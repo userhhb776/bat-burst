@@ -7,7 +7,7 @@ import { Pencil, Plus, Power, QrCode, RefreshCw, Trash2, UsersRound } from "luci
 import { supabase } from "@/integrations/supabase/client";
 import {
   connectInstance, createInstance, deleteInstance, fetchGroups, logoutInstance, refreshInstances, type GroupInfo,
-} from "@/server/crm.functions";
+} from "@/lib/crm.functions";
 import { PageHeader, StatusBadge } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

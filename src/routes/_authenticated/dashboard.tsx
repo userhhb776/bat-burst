@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { CheckCheck, MessageCircleReply, RefreshCw, Users, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { processQueue, refreshInstances, syncReplies } from "@/server/crm.functions";
+import { processQueue, refreshInstances, syncReplies } from "@/lib/crm.functions";
 import { PageHeader } from "@/components/AppShell";
 import { RiskGauge } from "@/components/RiskGauge";
 import { Button } from "@/components/ui/button";

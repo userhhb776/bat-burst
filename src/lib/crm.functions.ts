@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { evo, isNoWhatsappError, mapState } from "./evolution.server";
+import { evo, isNoWhatsappError, mapState } from "@/server/evolution.server";
 import { buildSchedule, createBalancedPicker, normalizePhone, renderMessage, type Cadence } from "@/lib/crm";
 
 const slug = (s: string) =>
