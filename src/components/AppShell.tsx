@@ -167,7 +167,7 @@ export function PageHeader({ title, desc, children }: { title: string; desc?: st
         <h1 className="font-display text-xl font-semibold sm:text-2xl md:text-3xl">{title}</h1>
         {desc && <p className="mt-1 text-sm text-muted-foreground">{desc}</p>}
       </div>
-      {children && <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap [&>*]:w-full sm:[&>*]:w-auto">{children}</div>}
+      {children && <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap [&>*]:w-full sm:[&>*]:w-auto [&>*:last-child:nth-child(odd)]:col-span-2 sm:[&>*:last-child:nth-child(odd)]:col-span-1">{children}</div>}
     </div>
   );
 }

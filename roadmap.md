@@ -1,12 +1,6 @@
 # Tasks
-- [x] Apply Bat Burst 7.5 identity, black/orange theme, logo and favicon.
-- [x] Add group selection and contact extraction to Contacts, preserving Connections.
-- [ ] Smarter risk meter (volume, speed, variety, hours)
-- [ ] Remove PACK - TESTE from Lists; remove batch insert from Contacts
-- [ ] Audio steps in Scripts
-- [ ] Richer Dashboard
-- [ ] Campaign metrics + edit + delete
-- [ ] Notes & Agenda section
-- [ ] Notifications: every 2 sends and on lead replies (installable app)
-- [ ] Mobile layout polish
-- [ ] Login only (no signup); single account; move existing data to it
+- [x] Bat Burst identity, group extraction
+- [x] Smarter risk meter, removed PACK - TESTE and batch insert
+- [x] Audio steps, richer dashboard, campaign metrics/edit/delete
+- [x] Notes & Agenda, notifications (every 2 sends, replies), installable app icon
+- [x] Mobile layout, login-only with single account, data moved
