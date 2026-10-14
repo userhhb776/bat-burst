@@ -1,5 +1,6 @@
 # Tasks
-- [x] Apply Bat Burst 7.5 identity, black/orange theme, logo and favicon.
-- [x] Add group selection and contact extraction to Contacts, preserving Connections.
-- [x] Verify routing, extraction mapper tests and public desktop/mobile screens.
-- [ ] Verify extraction with real groups — blocked until the user signs into the preview; managed session minting could not match their account.
+- [x] Bat Burst identity, group extraction
+- [x] Smarter risk meter, removed PACK - TESTE and batch insert
+- [x] Audio steps, richer dashboard, campaign metrics/edit/delete
+- [x] Notes & Agenda, notifications (every 2 sends, replies), installable app icon
+- [x] Mobile layout, login-only with single account, data moved

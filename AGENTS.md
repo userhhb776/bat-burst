@@ -17,3 +17,6 @@
 - Every app table carries `user_id` defaulting to `auth.uid()` with an own-rows RLS policy — multi-tenant isolation.
 - Brand imagery is shared through BrandLogo and page metadata through pageMeta — keeps identity consistent across screens.
 - Contacts group extraction uses GroupContactsDialog with a pure prepareGroupContacts mapper — preserves existing Connections behavior and makes deduplication testable.
+- Device notifications use `src/lib/notify.ts` with a notification-only `public/notify-sw.js` (no caching), registered only outside preview — Android requires a SW to show notifications.
+- Audio script steps store private storage paths in `script_steps.audio_urls`; processQueue signs a URL at send time — the bucket cannot be public.
+- Sign-up is disabled; the app is single-user and only the login form exists.

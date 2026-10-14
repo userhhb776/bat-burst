@@ -222,6 +222,39 @@ export type Database = {
         }
         Relationships: []
       }
+      notes: {
+        Row: {
+          color: string
+          content: string
+          created_at: string
+          done: boolean
+          due_at: string | null
+          id: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          color?: string
+          content?: string
+          created_at?: string
+          done?: boolean
+          due_at?: string | null
+          id?: string
+          title?: string
+          user_id?: string
+        }
+        Update: {
+          color?: string
+          content?: string
+          created_at?: string
+          done?: boolean
+          due_at?: string | null
+          id?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       queue_messages: {
         Row: {
           attempts: number
@@ -232,8 +265,10 @@ export type Database = {
           created_at: string
           error: string | null
           id: string
+          media_url: string | null
           phone: string
           replied: boolean
+          replied_at: string | null
           scheduled_at: string
           sent_at: string | null
           status: string
@@ -250,8 +285,10 @@ export type Database = {
           created_at?: string
           error?: string | null
           id?: string
+          media_url?: string | null
           phone: string
           replied?: boolean
+          replied_at?: string | null
           scheduled_at: string
           sent_at?: string | null
           status?: string
@@ -268,8 +305,10 @@ export type Database = {
           created_at?: string
           error?: string | null
           id?: string
+          media_url?: string | null
           phone?: string
           replied?: boolean
+          replied_at?: string | null
           scheduled_at?: string
           sent_at?: string | null
           status?: string
@@ -296,24 +335,30 @@ export type Database = {
       }
       script_steps: {
         Row: {
+          audio_urls: string[]
           created_at: string
           id: string
+          kind: string
           position: number
           script_id: string
           user_id: string
           variations: string[]
         }
         Insert: {
+          audio_urls?: string[]
           created_at?: string
           id?: string
+          kind?: string
           position?: number
           script_id: string
           user_id?: string
           variations?: string[]
         }
         Update: {
+          audio_urls?: string[]
           created_at?: string
           id?: string
+          kind?: string
           position?: number
           script_id?: string
           user_id?: string

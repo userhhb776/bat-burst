@@ -3,10 +3,12 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  LayoutDashboard, Smartphone, Users, ListChecks, MessageSquareText, Send, ScrollText, LogOut, Menu, X,
+  LayoutDashboard, Smartphone, Users, ListChecks, MessageSquareText, Send, ScrollText, LogOut, Menu, X, NotebookPen, Bell, BellOff,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { processQueue } from "@/lib/crm.functions";
+import { processQueue, syncReplies } from "@/lib/crm.functions";
+import { initNotifications, notifyPermission, notifyReplies, requestNotifyPermission, trackSent } from "@/lib/notify";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { BrandLogo } from "@/components/BrandLogo";
 import { Button } from "@/components/ui/button";
@@ -18,14 +20,20 @@ const nav = [
   { to: "/lists", label: "Listas", icon: ListChecks },
   { to: "/scripts", label: "Scripts", icon: MessageSquareText },
   { to: "/campaigns", label: "Campanhas", icon: Send },
+  { to: "/notes", label: "Notas e agenda", icon: NotebookPen },
   { to: "/logs", label: "Histórico", icon: ScrollText },
 ] as const;
 
 /** Runs the sending queue every 20s while the app is open. */
 function QueueWorker({ onTick }: { onTick: (s: string) => void }) {
   const run = useServerFn(processQueue);
+  const replies = useServerFn(syncReplies);
   const qc = useQueryClient();
   const busy = useRef(false);
+  const ticks = useRef(0);
+  useEffect(() => {
+    initNotifications();
+  }, []);
   useEffect(() => {
     const tick = async () => {
       if (busy.current) return;
@@ -33,6 +41,15 @@ function QueueWorker({ onTick }: { onTick: (s: string) => void }) {
       try {
         const r = await run();
         if (r.checked) qc.invalidateQueries();
+        if (r.sentNames?.length) trackSent(r.sentNames);
+        if (ticks.current++ % 6 === 0) {
+          const rp = await replies();
+          if (rp.names?.length) {
+            notifyReplies(rp.names);
+            rp.names.forEach((n) => toast.success(`💬 ${n} respondeu ao disparo`));
+            qc.invalidateQueries();
+          }
+        }
         onTick(new Date().toLocaleTimeString("pt-BR"));
       } catch {
         /* retry next tick */
@@ -43,7 +60,7 @@ function QueueWorker({ onTick }: { onTick: (s: string) => void }) {
     tick();
     const id = setInterval(tick, 20_000);
     return () => clearInterval(id);
-  }, [run, qc, onTick]);
+  }, [run, replies, qc, onTick]);
   return null;
 }
 
@@ -51,6 +68,20 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [lastTick, setLastTick] = useState<string>("");
   const navigate = useNavigate();
+  const [perm, setPerm] = useState<string>("default");
+  useEffect(() => setPerm(notifyPermission()), []);
+  const NotifyBtn = (
+    <Button variant="ghost" className="flex w-full items-center justify-start gap-3 px-3 text-sm text-muted-foreground"
+      onClick={async () => {
+        const p = await requestNotifyPermission();
+        setPerm(p);
+        if (p === "granted") toast.success("Notificações ativadas neste aparelho");
+        else toast.error("Permita as notificações nas configurações do navegador");
+      }}>
+      {perm === "granted" ? <Bell className="h-4 w-4 text-primary" /> : <BellOff className="h-4 w-4" />}
+      {perm === "granted" ? "Notificações ativas" : "Ativar notificações"}
+    </Button>
+  );
   const Nav = (
     <nav className="flex flex-col gap-1">
       {nav.map((n) => (
@@ -76,6 +107,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <span className="h-2 w-2 animate-pulse rounded-full bg-success" />
         Motor de envio ativo {lastTick && `· ${lastTick}`}
       </div>
+      {NotifyBtn}
       <Button variant="ghost"
         onClick={async () => {
           await supabase.auth.signOut();
@@ -95,17 +127,25 @@ export function AppShell({ children }: { children: ReactNode }) {
         {Footer}
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between border-b border-border bg-sidebar px-4 py-3 md:hidden">
-          {Brand}
+        <header className="sticky top-0 z-40 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-b border-border bg-sidebar/95 px-3 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))] backdrop-blur md:hidden">
+          <BrandLogo className="h-9 w-auto max-w-[170px] object-contain object-left" />
           <Button variant="ghost" size="icon" onClick={() => setOpen(true)} aria-label="Menu">
             <Menu className="h-5 w-5" />
           </Button>
         </header>
-        <main className="mx-auto w-full max-w-7xl flex-1 p-4 md:p-8">{children}</main>
+        <main className="mx-auto w-full min-w-0 max-w-7xl flex-1 px-3 pb-24 pt-4 sm:px-4 md:p-8">{children}</main>
+        <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-border bg-sidebar/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
+          {nav.filter((n) => ["/dashboard", "/contacts", "/campaigns", "/notes", "/instances"].includes(n.to)).map((n) => (
+            <Link key={n.to} to={n.to} className="flex flex-col items-center gap-1 py-2 text-[10px] text-muted-foreground" activeProps={{ className: "text-primary" }}>
+              <n.icon className="h-5 w-5" />
+              <span className="truncate">{n.label.split(" ")[0]}</span>
+            </Link>
+          ))}
+        </nav>
       </div>
       <div className={cn("fixed inset-0 z-50 md:hidden", open ? "block" : "hidden")}>
         <div className="absolute inset-0 bg-background/80" onClick={() => setOpen(false)} />
-        <div className="absolute left-0 top-0 flex h-full w-64 flex-col justify-between bg-sidebar p-4">
+        <div className="absolute left-0 top-0 flex h-full w-72 max-w-[85vw] flex-col justify-between overflow-y-auto bg-sidebar p-4 pt-[max(1rem,env(safe-area-inset-top))]">
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               {Brand}
@@ -122,12 +162,12 @@ export function AppShell({ children }: { children: ReactNode }) {
 
 export function PageHeader({ title, desc, children }: { title: string; desc?: string; children?: ReactNode }) {
   return (
-    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <h1 className="text-2xl font-semibold md:text-3xl">{title}</h1>
+    <div className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-end sm:justify-between">
+      <div className="min-w-0">
+        <h1 className="font-display text-xl font-semibold sm:text-2xl md:text-3xl">{title}</h1>
         {desc && <p className="mt-1 text-sm text-muted-foreground">{desc}</p>}
       </div>
-      {children && <div className="flex flex-wrap gap-2">{children}</div>}
+      {children && <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap [&>*]:w-full sm:[&>*]:w-auto [&>*:last-child:nth-child(odd)]:col-span-2 sm:[&>*:last-child:nth-child(odd)]:col-span-1">{children}</div>}
     </div>
   );
 }

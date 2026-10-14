@@ -117,28 +117,87 @@ export function buildSchedule<T>(contacts: T[], stepsCount: number, c: Cadence, 
 }
 
 export type RiskLevel = "Baixo" | "Moderado" | "Alto";
-export function computeRisk(
-  campaigns: Array<Cadence & { minVariations: number }>,
-): { level: RiskLevel; score: number; reasons: string[] } {
-  if (!campaigns.length) return { level: "Baixo", score: 0, reasons: ["Nenhuma campanha ativa"] };
+export type RiskInput = Cadence & { minVariations: number; stepsCount?: number; instance_id?: string | null };
+
+/**
+ * Estimates the chance of WhatsApp spam flags / bans. Considers the real daily
+ * volume (limit capped by what the window and interval allow), messages per hour,
+ * text variety, sending hours, funnel speed and combined load per connection.
+ */
+export function computeRisk(campaigns: RiskInput[]): { level: RiskLevel; score: number; reasons: string[]; perDay: number; perHour: number } {
+  if (!campaigns.length) return { level: "Baixo", score: 0, reasons: ["Nenhuma campanha ativa"], perDay: 0, perHour: 0 };
+  const byInst = new Map<string, { perDay: number; perHour: number }>();
   let worst = 0;
   let reasons: string[] = [];
-  for (const c of campaigns) {
+  let worstDay = 0;
+  let worstHour = 0;
+  for (const [idx, c] of campaigns.entries()) {
     let s = 0;
     const r: string[] = [];
-    const avg = (c.contact_min_sec + c.contact_max_sec) / 2;
-    if (avg < 120) (s += 40), r.push("Intervalo entre contatos muito curto");
-    else if (avg < 240) (s += 20), r.push("Intervalo entre contatos moderado");
-    if (c.daily_limit > 150) (s += 30), r.push("Limite diário alto");
-    else if (c.daily_limit > 80) (s += 15), r.push("Limite diário moderado");
-    if (c.minVariations <= 1) (s += 25), r.push("Etapas sem variações de texto");
+    const steps = Math.max(1, c.stepsCount ?? 1);
+    const avg = Math.max(1, (c.contact_min_sec + c.contact_max_sec) / 2);
+    const windowH = Math.max(1, c.end_hour - c.start_hour);
+    const capacity = Math.floor((windowH * 3600) / avg);
+    const contactsDay = Math.min(c.daily_limit, capacity);
+    const msgsDay = contactsDay * steps;
+    const msgsHour = Math.round((3600 / avg) * steps);
+    const key = c.instance_id || `c${idx}`;
+    const agg = byInst.get(key) || { perDay: 0, perHour: 0 };
+    agg.perDay += msgsDay;
+    agg.perHour += msgsHour;
+    byInst.set(key, agg);
+
+    // Daily volume (main ban driver)
+    if (msgsDay >= 1000) (s += 60), r.push(`${msgsDay} mensagens/dia — volume extremo, bloqueio quase certo`);
+    else if (msgsDay >= 500) (s += 48), r.push(`${msgsDay} mensagens/dia — volume muito alto`);
+    else if (msgsDay >= 250) (s += 34), r.push(`${msgsDay} mensagens/dia — volume alto`);
+    else if (msgsDay >= 120) (s += 20), r.push(`${msgsDay} mensagens/dia — volume moderado`);
+    else if (msgsDay >= 60) (s += 8);
+    if (c.daily_limit >= 1000) (s += 45), r.push(`Limite diário de ${c.daily_limit} contatos — muito acima do seguro (até ~80)`);
+    else if (c.daily_limit >= 300) (s += 25), r.push(`Limite diário de ${c.daily_limit} contatos — acima do recomendado`);
+    else if (c.daily_limit >= 150) (s += 10), r.push(`Limite diário de ${c.daily_limit} contatos`);
+    if (c.daily_limit > capacity) r.push(`O horário só comporta ~${capacity} contatos/dia com esse intervalo`);
+
+    // Speed
+    if (msgsHour >= 120) (s += 30), r.push(`${msgsHour} mensagens/hora — ritmo de robô`);
+    else if (msgsHour >= 60) (s += 22), r.push(`${msgsHour} mensagens/hora — ritmo acelerado`);
+    else if (msgsHour >= 30) (s += 12), r.push(`${msgsHour} mensagens/hora`);
+    if (avg < 60) (s += 15), r.push("Intervalo entre contatos abaixo de 1 minuto");
+    if (c.contact_max_sec - c.contact_min_sec < 30) (s += 6), r.push("Intervalo pouco aleatório (padrão previsível)");
+
+    // Variety
+    if (c.minVariations <= 1) (s += 22), r.push("Etapas sem variações — textos idênticos");
     else if (c.minVariations === 2) (s += 10), r.push("Poucas variações de texto");
-    if (c.start_hour < 8 || c.end_hour > 21) (s += 15), r.push("Envios fora do horário comercial");
-    if (c.msg_min_sec < 10) (s += 10), r.push("Mensagens do funil muito rápidas");
-    if (s > worst) (worst = s), (reasons = r);
+    else if (c.minVariations >= 5) s -= 5;
+
+    // Hours / days
+    if (c.start_hour < 7 || c.end_hour > 22) (s += 14), r.push("Envios de madrugada ou tarde da noite");
+    else if (c.start_hour < 8 || c.end_hour > 20) (s += 6), r.push("Envios fora do horário comercial");
+    if (c.weekdays.length === 7) (s += 5), r.push("Envios todos os dias, sem pausa");
+
+    // Funnel
+    if (steps > 1 && c.msg_min_sec < 5) (s += 12), r.push("Mensagens do funil quase simultâneas");
+    else if (steps > 1 && c.msg_min_sec < 10) (s += 6), r.push("Mensagens do funil muito rápidas");
+    if (steps >= 5) (s += 6), r.push("Funil longo sem resposta do lead");
+
+    if (s > worst || idx === 0) (worst = s), (reasons = r), (worstDay = msgsDay), (worstHour = msgsHour);
   }
-  const score = Math.min(100, worst);
-  return { level: score >= 60 ? "Alto" : score >= 30 ? "Moderado" : "Baixo", score, reasons: reasons.length ? reasons : ["Configuração segura"] };
+  for (const a of byInst.values()) {
+    if (a.perDay > worstDay && campaigns.length > 1) {
+      const extra = a.perDay >= 500 ? 25 : a.perDay >= 250 ? 15 : 0;
+      if (extra) (worst += extra), reasons.push(`Campanhas somadas na mesma conexão: ${a.perDay} mensagens/dia`);
+      worstDay = Math.max(worstDay, a.perDay);
+      worstHour = Math.max(worstHour, a.perHour);
+    }
+  }
+  const score = Math.max(0, Math.min(100, worst));
+  return {
+    level: score >= 55 ? "Alto" : score >= 28 ? "Moderado" : "Baixo",
+    score,
+    reasons: reasons.length ? reasons : ["Configuração segura para o WhatsApp"],
+    perDay: worstDay,
+    perHour: worstHour,
+  };
 }
 
 export function parseCsv(text: string): string[][] {

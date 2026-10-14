@@ -128,7 +128,10 @@ export const startCampaign = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const sb = context.supabase;
     const { data: steps } = await sb.from("script_steps").select("*").eq("script_id", data.script_id).order("position");
-    const usable = (steps || []).map((s) => s.variations.filter((v) => v.trim())).filter((v) => v.length);
+    const usableSteps = (steps || [])
+      .map((s: any) => ({ audio: s.kind === "audio", items: (s.kind === "audio" ? s.audio_urls || [] : s.variations).filter((v: string) => v.trim()) }))
+      .filter((s) => s.items.length);
+    const usable = usableSteps.map((s) => s.items as string[]);
     if (!usable.length) throw new Error("O script selecionado não possui mensagens.");
     const { data: links } = await sb
       .from("list_contacts")
@@ -159,7 +162,8 @@ export const startCampaign = createServerFn({ method: "POST" })
         contact_name: contact.name,
         step_position: step,
         variation_index: vi,
-        content: renderMessage(usable[step]![vi] ?? "", contact),
+        content: usableSteps[step]!.audio ? "🎤 Áudio" : renderMessage(usable[step]![vi] ?? "", contact),
+        media_url: usableSteps[step]!.audio ? (usable[step]![vi] ?? null) : null,
         scheduled_at: at.toISOString(),
       };
     });
@@ -185,6 +189,7 @@ export const processQueue = createServerFn({ method: "POST" })
       .limit(5);
     let sent = 0;
     let failed = 0;
+    const sentNames: string[] = [];
     for (const m of (due || []) as any[]) {
       const inst = m.campaigns?.instances;
       const { data: claimed } = await sb
@@ -200,12 +205,22 @@ export const processQueue = createServerFn({ method: "POST" })
         continue;
       }
       try {
-        await evo(`/message/sendText/${inst.instance_name}`, {
-          method: "POST",
-          body: JSON.stringify({ number: m.phone, text: m.content }),
-        });
+        if (m.media_url) {
+          const { data: signed, error: se } = await sb.storage.from("audios").createSignedUrl(m.media_url, 3600);
+          if (se || !signed) throw new Error("Áudio não encontrado");
+          await evo(`/message/sendWhatsAppAudio/${inst.instance_name}`, {
+            method: "POST",
+            body: JSON.stringify({ number: m.phone, audio: signed.signedUrl, delay: 1200 }),
+          });
+        } else {
+          await evo(`/message/sendText/${inst.instance_name}`, {
+            method: "POST",
+            body: JSON.stringify({ number: m.phone, text: m.content }),
+          });
+        }
         await sb.from("queue_messages").update({ status: "sent", sent_at: new Date().toISOString(), error: null }).eq("id", m.id);
         sent++;
+        sentNames.push(m.contact_name || m.phone);
       } catch (e) {
         const msg = e instanceof Error ? e.message.slice(0, 400) : String(e);
         failed++;
@@ -238,7 +253,7 @@ export const processQueue = createServerFn({ method: "POST" })
         .in("status", ["pending", "sending"]);
       if (!count) await sb.from("campaigns").update({ status: "completed" }).eq("id", c.id);
     }
-    return { sent, failed, checked: due?.length || 0 };
+    return { sent, failed, sentNames, checked: due?.length || 0 };
   });
 
 /** Checks recent conversations for replies after our messages were sent. */
@@ -249,13 +264,14 @@ export const syncReplies = createServerFn({ method: "POST" })
     const since = new Date(Date.now() - 7 * 86400_000).toISOString();
     const { data: msgs } = await sb
       .from("queue_messages")
-      .select("id, phone, sent_at, campaigns(instances(instance_name))")
+      .select("id, phone, contact_name, sent_at, campaigns(instances(instance_name))")
       .eq("status", "sent")
       .eq("replied", false)
       .gte("sent_at", since)
       .order("sent_at", { ascending: false })
       .limit(40);
     let replies = 0;
+    const names: string[] = [];
     const seen = new Set<string>();
     for (const m of (msgs || []) as any[]) {
       const inst = m.campaigns?.instances?.instance_name;
@@ -269,12 +285,13 @@ export const syncReplies = createServerFn({ method: "POST" })
         const records: any[] = r?.messages?.records ?? r?.records ?? (Array.isArray(r) ? r : []);
         const sentTs = new Date(m.sent_at).getTime() / 1000;
         if (records.some((x) => !x?.key?.fromMe && Number(x?.messageTimestamp) > sentTs)) {
-          await sb.from("queue_messages").update({ replied: true }).eq("phone", m.phone).eq("status", "sent");
+          await sb.from("queue_messages").update({ replied: true, replied_at: new Date().toISOString() }).eq("phone", m.phone).eq("status", "sent");
           replies++;
+          names.push(m.contact_name || m.phone);
         }
       } catch {
         /* ignore per-contact errors */
       }
     }
-    return { replies };
+    return { replies, names };
   });
