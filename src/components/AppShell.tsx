@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { processQueue, syncReplies } from "@/lib/crm.functions";
-import { initNotifications, notifyPermission, notifyReplies, requestNotifyPermission, trackSent } from "@/lib/notify";
+import { initNotifications, notifyPermission, notifyReplies, requestNotifyPermission, sendNotification, trackSent } from "@/lib/notify";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { BrandLogo } from "@/components/BrandLogo";
@@ -75,8 +75,14 @@ export function AppShell({ children }: { children: ReactNode }) {
       onClick={async () => {
         const p = await requestNotifyPermission();
         setPerm(p);
-        if (p === "granted") toast.success("Notificações ativadas neste aparelho");
-        else toast.error("Permita as notificações nas configurações do navegador");
+        if (p === "granted") {
+          toast.success("Notificações ativadas neste aparelho");
+          setTimeout(() => {
+            void sendNotification("🦇 Bat Burst 7.5", "Tudo certo! As notificações estão funcionando neste aparelho.", "bb-test");
+          }, 600);
+        } else {
+          toast.error("Permita as notificações nas configurações do navegador");
+        }
       }}>
       {perm === "granted" ? <Bell className="h-4 w-4 text-primary" /> : <BellOff className="h-4 w-4" />}
       {perm === "granted" ? "Notificações ativas" : "Ativar notificações"}
