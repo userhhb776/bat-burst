@@ -122,3 +122,8 @@
     letter-spacing: 0;
   }
 }
+
+/* Oculta o selo "Edit with Lovable" */
+#lovable-badge {
+  display: none !important;
+}
