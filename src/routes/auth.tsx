@@ -44,7 +44,7 @@ function AuthPage() {
     } else {
       const { error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin + "/dashboard" } });
       if (error) toast.error(error.message);
-      else toast.success("Conta criada! Confirme pelo link enviado ao seu e-mail.");
+      else toast.success("Conta criada! Você já está dentro.");
     }
     setLoading(false);
   };
