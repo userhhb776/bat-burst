@@ -35,7 +35,7 @@ export async function requestNotifyPermission() {
 
 export async function sendNotification(title: string, body: string, tag?: string) {
   if (!notifySupported() || Notification.permission !== "granted") return;
-  const opts: NotificationOptions = { body, icon: "/icon-192.png", badge: "/icon-192.png", tag, data: { url: "/dashboard" } };
+  const opts: NotificationOptions = { body, icon: "/icon-192.png", badge: "/icon-192.png", tag: tag ?? "bb", data: { url: "/dashboard" } };
   try {
     const r = reg ?? (await navigator.serviceWorker?.getRegistration?.());
     if (r) return void (await r.showNotification(title, opts));
