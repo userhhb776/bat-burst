@@ -165,7 +165,7 @@ export const startCampaign = createServerFn({ method: "POST" })
     }
     if (!contacts.length) throw new Error("A lista selecionada não tem contatos válidos.");
 
-    const { name, instance_id, list_id, script_id, ...cad } = data;
+    const { name, instance_id, list_id, script_id, only_unsent: _skip, ...cad } = data;
     const { data: camp, error } = await sb
       .from("campaigns")
       .insert({ name, instance_id, list_id, script_id, ...cad, status: "running", user_id: context.userId })
