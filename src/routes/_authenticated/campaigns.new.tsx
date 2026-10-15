@@ -56,7 +56,7 @@ function Wizard() {
   const [f, setF] = useState({
     name: "", instance_id: "", list_id: "", script_id: "",
     start_hour: 9, end_hour: 18, weekdays: [1, 2, 3, 4, 5], daily_limit: 50,
-    contact_min_sec: 180, contact_max_sec: 420, msg_min_sec: 15, msg_max_sec: 30, start_now: false,
+    contact_min_sec: 180, contact_max_sec: 420, msg_min_sec: 15, msg_max_sec: 30, start_now: false, only_unsent: false,
   });
   const { data: instances = [] } = useQuery({ queryKey: ["instances"], queryFn: async () => (await supabase.from("instances").select("*")).data || [] });
   const { data: lists = [] } = useQuery({ queryKey: ["lists", "count"], queryFn: async () => (await supabase.from("lists").select("id, name, is_test, list_contacts(count)").order("is_test", { ascending: false })).data || [] });
@@ -119,13 +119,19 @@ function Wizard() {
           </div>
         )}
         {step === 1 && (
-          <div className="grid gap-3 sm:grid-cols-2">
-            {lists.map((l: any) => (
-              <div key={l.id} onClick={() => setF({ ...f, list_id: l.id })}>
-                <Card id={l.id} title={l.name} sub={`${l.list_contacts?.[0]?.count ?? 0} contatos${l.is_test ? " · validação prévia" : ""}`} active={f.list_id === l.id} />
-              </div>
-            ))}
-            {!lists.length && <p className="text-sm text-muted-foreground">Crie uma lista na tela Listas.</p>}
+          <div className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-2">
+              {lists.map((l: any) => (
+                <div key={l.id} onClick={() => setF({ ...f, list_id: l.id })}>
+                  <Card id={l.id} title={l.name} sub={`${l.list_contacts?.[0]?.count ?? 0} contatos`} active={f.list_id === l.id} />
+                </div>
+              ))}
+              {!lists.length && <p className="text-sm text-muted-foreground">Crie uma lista na tela Listas.</p>}
+            </div>
+            <label className="flex items-center justify-between gap-4 rounded-xl border border-border p-4">
+              <div><div className="font-medium">Só erros / não enviados</div><div className="text-xs text-muted-foreground">Pula quem já recebeu mensagem em campanhas anteriores desta lista — ideal para reprocessar falhas sem duplicar.</div></div>
+              <Switch checked={f.only_unsent} onCheckedChange={(v) => setF({ ...f, only_unsent: v })} />
+            </label>
           </div>
         )}
         {step === 2 && (

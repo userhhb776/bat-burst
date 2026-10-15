@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { evo, isNoWhatsappError, mapState } from "@/server/evolution.server";
+import { evo, EvolutionError, isNoWhatsappError, mapState } from "@/server/evolution.server";
 import { buildSchedule, createBalancedPicker, normalizePhone, renderMessage, type Cadence } from "@/lib/crm";
 
 const slug = (s: string) =>
@@ -120,7 +120,13 @@ export const fetchGroups = createServerFn({ method: "POST" })
     }));
   });
 
-type CampaignInput = Cadence & { name: string; instance_id: string; list_id: string; script_id: string };
+type CampaignInput = Cadence & { name: string; instance_id: string; list_id: string; script_id: string; only_unsent?: boolean };
+
+/** 502/503/504 or a network error means the Render server is asleep or restarting. */
+function isServerAsleep(e: unknown) {
+  if (e instanceof EvolutionError) return [502, 503, 504].includes(e.status);
+  return e instanceof TypeError || /fetch failed|network|ECONN|timed? ?out/i.test(String(e));
+}
 
 export const startCampaign = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -137,9 +143,26 @@ export const startCampaign = createServerFn({ method: "POST" })
       .from("list_contacts")
       .select("contacts(id, name, phone, company, is_valid, is_admin)")
       .eq("list_id", data.list_id);
-    const contacts = (links || [])
+    let contacts = (links || [])
       .map((l: any) => l.contacts)
       .filter((c: any) => c && c.is_valid && !c.is_admin);
+    if (data.only_unsent) {
+      // Skip anyone who already received a message from an earlier campaign on this list.
+      const { data: prev } = await sb.from("campaigns").select("id").eq("list_id", data.list_id);
+      const ids = (prev || []).map((p) => p.id);
+      const done = new Set<string>();
+      for (let i = 0; i < ids.length; i += 50) {
+        let from = 0;
+        for (;;) {
+          const { data: rows } = await sb.from("queue_messages").select("phone").in("campaign_id", ids.slice(i, i + 50)).eq("status", "sent").range(from, from + 999);
+          (rows || []).forEach((r) => done.add(r.phone));
+          if (!rows || rows.length < 1000) break;
+          from += 1000;
+        }
+      }
+      contacts = contacts.filter((c: any) => !done.has(c.phone));
+      if (!contacts.length) throw new Error("Todos os contatos dessa lista já receberam mensagem.");
+    }
     if (!contacts.length) throw new Error("A lista selecionada não tem contatos válidos.");
 
     const { name, instance_id, list_id, script_id, ...cad } = data;
@@ -190,6 +213,18 @@ export const processQueue = createServerFn({ method: "POST" })
     let sent = 0;
     let failed = 0;
     const sentNames: string[] = [];
+    if (due?.length) {
+      // Wake the Evolution server before the round; if it is asleep, push the batch 10 min ahead.
+      try {
+        await evo("/");
+      } catch (e) {
+        if (isServerAsleep(e)) {
+          const later = new Date(Date.now() + 600_000).toISOString();
+          await sb.from("queue_messages").update({ scheduled_at: later, error: "Servidor do WhatsApp acordando — reagendada" }).in("id", due.map((d: any) => d.id)).eq("status", "pending");
+          return { sent: 0, failed: 0, sentNames, checked: due.length, sleeping: true };
+        }
+      }
+    }
     for (const m of (due || []) as any[]) {
       const inst = m.campaigns?.instances;
       const { data: claimed } = await sb
@@ -223,6 +258,14 @@ export const processQueue = createServerFn({ method: "POST" })
         sentNames.push(m.contact_name || m.phone);
       } catch (e) {
         const msg = e instanceof Error ? e.message.slice(0, 400) : String(e);
+        if (isServerAsleep(e)) {
+          // Render asleep/unstable: not a real failure — retry in 10 min without spending an attempt.
+          await sb
+            .from("queue_messages")
+            .update({ status: "pending", attempts: m.attempts, error: "Servidor do WhatsApp acordando — reagendada", scheduled_at: new Date(Date.now() + 600_000).toISOString() })
+            .eq("id", m.id);
+          continue;
+        }
         failed++;
         if (isNoWhatsappError(e)) {
           await sb.from("queue_messages").update({ status: "failed", error: "Número sem WhatsApp" }).eq("id", m.id);
