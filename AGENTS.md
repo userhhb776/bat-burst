@@ -21,4 +21,5 @@
 - Audio script steps store private storage paths in `script_steps.audio_urls`; processQueue signs a URL at send time — the bucket cannot be public.
 - Signup creates a pending profile; approval is enforced by restrictive RLS and requireApprovedAccount on every CRM server function, keeping unapproved users out of data and Evolution operations.
 - Administrator roles live in user_roles; ACESS reads and decisions validate the role server-side, never from account metadata or browser storage.
+- ACESS reviews any pending account, independently of its request timestamp, while preventing decisions on administrator accounts — keeps existing accounts manageable.
 - Audit discrete navigation, debounced searches, button actions and database mutations; reports paginate on demand and never capture credentials or external device activity.
