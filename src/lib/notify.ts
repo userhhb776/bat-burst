@@ -33,13 +33,14 @@ export async function requestNotifyPermission() {
   return Notification.requestPermission();
 }
 
-export async function sendNotification(title: string, body: string, tag?: string) {
+export async function sendNotification(title: string, body: string, tag?: string, url = "/dashboard") {
   if (!notifySupported() || Notification.permission !== "granted") return;
-  const opts: NotificationOptions = { body, icon: "/icon-192.png", badge: "/icon-192.png", tag: tag ?? "bb", data: { url: "/dashboard" } };
+  const opts: NotificationOptions = { body, icon: "/icon-192.png", badge: "/icon-192.png", tag: tag ?? "bb", data: { url } };
   try {
     const r = reg ?? (await navigator.serviceWorker?.getRegistration?.());
     if (r) return void (await r.showNotification(title, opts));
-    new Notification(title, opts);
+    const notification = new Notification(title, opts);
+    notification.onclick = () => { window.focus(); window.location.assign(url); notification.close(); };
   } catch {
     /* unsupported context */
   }
