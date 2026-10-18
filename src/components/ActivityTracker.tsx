@@ -14,11 +14,11 @@ export function ActivityTracker() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   useEffect(() => {
     // Discrete navigation events only; no query strings, credentials or form values.
-    void supabase.rpc("record_account_events", { events: [{ kind: "page", path: pathname, detail: "Página visitada", device: deviceInfo() }] });
+    void supabase.rpc("record_account_events", { events: [{ kind: "page", path: pathname, detail: "Página visitada", device: deviceInfo() }] }).then(() => undefined);
     const queue: ReturnType<typeof eventSchema.parse>[] = [];
     const flush = () => {
       if (!queue.length) return;
-      void supabase.rpc("record_account_events", { events: queue.splice(0, 20) });
+      void supabase.rpc("record_account_events", { events: queue.splice(0, 20) }).then(() => undefined);
     };
     let timer: ReturnType<typeof setTimeout> | undefined;
     const search = (e: Event) => {
