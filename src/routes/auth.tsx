@@ -69,7 +69,6 @@ function AuthPage() {
           {signup && <div className="space-y-1.5"><Label htmlFor="account-name">Nome</Label><Input id="account-name" autoComplete="name" required minLength={2} maxLength={100} value={name} onChange={(e) => setName(e.target.value)} /></div>}
           <div className="space-y-1.5"><Label htmlFor="account-email">E-mail</Label><Input id="account-email" type="email" autoComplete="email" required maxLength={254} value={email} onChange={(e) => setEmail(e.target.value)} /></div>
           <div className="space-y-1.5"><Label htmlFor="account-password">Senha</Label><Input id="account-password" type="password" autoComplete={signup ? "new-password" : "current-password"} required minLength={signup ? 8 : undefined} maxLength={128} value={password} onChange={(e) => setPassword(e.target.value)} /></div>
-          {signup && <p className="text-xs text-muted-foreground">Ao criar a conta, você concorda com o registro de entradas, informações do navegador, páginas, buscas e ações no Bat Burst, disponíveis ao administrador. Senhas e atividades fora do aplicativo não são registradas.</p>}
           <Button className="h-11 w-full" disabled={loading}>{loading ? "Aguarde…" : signup ? "Criar conta" : "Entrar"}</Button>
         </form>
         <Button variant="ghost" className="mt-3 w-full" disabled={loading} onClick={() => { setSignup(!signup); setConfirmation(false); setPassword(""); }}>{signup ? "Já tenho conta — entrar" : "Criar uma conta"}</Button>
