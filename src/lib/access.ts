@@ -5,3 +5,4 @@ export const eventSchema = z.object({ kind: z.enum(["login", "page", "search", "
 export const reviewSchema = z.object({ userId: z.string().uuid(), decision: z.enum(["approved", "rejected"]) });
 export function canAccess(status: string | undefined) { return status === "approved"; }
 export function canReview(isAdmin: boolean, targetIsAdmin: boolean) { return isAdmin && !targetIsAdmin; }
+export function isPendingAccount(status: string) { return status === "pending"; }

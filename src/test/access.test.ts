@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { canAccess, canReview, signupSchema, eventSchema, reviewSchema } from "@/lib/access";
+import { canAccess, canReview, isPendingAccount, signupSchema, eventSchema, reviewSchema } from "@/lib/access";
 
 describe("Account approval rules", () => {
+  it("allows review of pending accounts even before an access request", () => {
+    const account = { approval_status: "pending", requested_at: null };
+    expect(isPendingAccount(account.approval_status)).toBe(true);
+    expect(isPendingAccount("approved")).toBe(false);
+    expect(isPendingAccount("rejected")).toBe(false);
+  });
   it("requires a name before signup", () => {
     expect(signupSchema.safeParse({ name: "", email: "member@example.com", password: "valid-example-password" }).success).toBe(false);
     expect(signupSchema.safeParse({ name: "Maria", email: "member@example.com", password: "valid-example-password" }).success).toBe(true);

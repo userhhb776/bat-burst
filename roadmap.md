@@ -1,4 +1,5 @@
 # Tasks
+- [ ] Restore approval controls for pending accounts without an explicit request; verify owner access
 - [x] Bat Burst identity, group extraction
 - [x] Smarter risk meter, removed PACK - TESTE and batch insert
 - [x] Audio steps, richer dashboard, campaign metrics/edit/delete
