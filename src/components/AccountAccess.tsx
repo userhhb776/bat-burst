@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { BrandLogo } from "@/components/BrandLogo";
 import { toast } from "sonner";
 
-export function AccountAccess({ status, requested, refresh, loading }: { status?: string; requested?: string | null; refresh: () => void; loading: boolean }) {
+export function AccountAccess({ status, requested, refresh, loading }: { status: string | undefined; requested: string | null | undefined; refresh: () => void; loading: boolean }) {
   const navigate = useNavigate();
   const qc = useQueryClient();
   return <div className="grid min-h-dvh place-items-center px-4"><div className="w-full max-w-md space-y-6 text-center">
