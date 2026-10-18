@@ -1,7 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { canAccess, canReview, isPendingAccount, signupSchema, eventSchema, reviewSchema } from "@/lib/access";
+import { isNewApprovalRequest } from "@/lib/access-notifications";
 
 describe("Account approval rules", () => {
+  it("notifies new requests, not historical accounts or repeated requests", () => {
+    const cursor = { requestedAt: "2026-10-18T17:23:00.000Z", id: "00000000-0000-0000-0000-000000000001" };
+    expect(isNewApprovalRequest({ id: cursor.id, name: "Maria", requested_at: "2026-10-18T17:24:00.000Z" }, cursor)).toBe(true);
+    expect(isNewApprovalRequest({ id: cursor.id, name: "Maria", requested_at: cursor.requestedAt }, cursor)).toBe(false);
+    expect(isNewApprovalRequest({ id: cursor.id, name: "Maria", requested_at: "2026-10-18T17:22:00.000Z" }, cursor)).toBe(false);
+  });
+  it("keeps distinct requests with the same timestamp", () => {
+    const cursor = { requestedAt: "2026-10-18T17:23:00.000Z", id: "00000000-0000-0000-0000-000000000001" };
+    expect(isNewApprovalRequest({ id: "00000000-0000-0000-0000-000000000002", name: "João", requested_at: cursor.requestedAt }, cursor)).toBe(true);
+  });
   it("allows review of pending accounts even before an access request", () => {
     const account = { approval_status: "pending", requested_at: null };
     expect(isPendingAccount(account.approval_status)).toBe(true);
