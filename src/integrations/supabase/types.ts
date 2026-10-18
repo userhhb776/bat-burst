@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_events: {
+        Row: {
+          created_at: string
+          detail: string
+          device: string
+          id: string
+          kind: string
+          path: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: string
+          device?: string
+          id?: string
+          kind: string
+          path?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          detail?: string
+          device?: string
+          id?: string
+          kind?: string
+          path?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       campaigns: {
         Row: {
           contact_max_sec: number
@@ -255,6 +285,39 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          approval_status: string
+          created_at: string
+          email: string
+          id: string
+          name: string
+          requested_at: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+        }
+        Insert: {
+          approval_status?: string
+          created_at?: string
+          email?: string
+          id: string
+          name?: string
+          requested_at?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+        }
+        Update: {
+          approval_status?: string
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          requested_at?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+        }
+        Relationships: []
+      }
       queue_messages: {
         Row: {
           attempts: number
@@ -395,15 +458,46 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_approved: { Args: { _user_id: string }; Returns: boolean }
+      record_account_events: { Args: { events: Json }; Returns: undefined }
+      request_account_access: { Args: never; Returns: undefined }
+      review_account_access: {
+        Args: { decision: string; target_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -530,6 +624,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
