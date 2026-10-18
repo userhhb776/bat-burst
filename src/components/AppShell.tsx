@@ -1,9 +1,9 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  LayoutDashboard, Smartphone, Users, ListChecks, MessageSquareText, Send, ScrollText, LogOut, Menu, X, NotebookPen, Bell, BellOff,
+  LayoutDashboard, Smartphone, Users, ListChecks, MessageSquareText, Send, ScrollText, LogOut, Menu, X, NotebookPen, Bell, BellOff, ShieldCheck,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { processQueue, syncReplies } from "@/lib/crm.functions";
@@ -12,6 +12,9 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { BrandLogo } from "@/components/BrandLogo";
 import { Button } from "@/components/ui/button";
+import { AccountAccess } from "@/components/AccountAccess";
+import { ActivityTracker } from "@/components/ActivityTracker";
+import { canAccess } from "@/lib/access";
 
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -65,6 +68,15 @@ function QueueWorker({ onTick }: { onTick: (s: string) => void }) {
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const qc = useQueryClient();
+  const access = useQuery({ queryKey: ["account-access"], staleTime: 0, refetchInterval: 30000, queryFn: async () => {
+    const { data: auth, error: authError } = await supabase.auth.getUser();
+    if (authError || !auth.user) throw new Error("Sessão indisponível");
+    const { data: profile, error } = await supabase.from("profiles").select("*").eq("id", auth.user.id).single();
+    if (error) throw error;
+    const { data: admin } = await supabase.rpc("has_role", { _user_id: auth.user.id, _role: "admin" });
+    return { profile, admin: !!admin };
+  } });
   const [open, setOpen] = useState(false);
   const [lastTick, setLastTick] = useState<string>("");
   const navigate = useNavigate();
@@ -102,6 +114,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           {n.label}
         </Link>
       ))}
+      {access.data?.admin && <Link to="/acess" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/80 hover:bg-sidebar-accent" activeProps={{ className: "bg-sidebar-accent text-primary font-medium" }}><ShieldCheck className="h-4 w-4" />ACESS</Link>}
     </nav>
   );
   const Brand = (
@@ -116,8 +129,10 @@ export function AppShell({ children }: { children: ReactNode }) {
       {NotifyBtn}
       <Button variant="ghost"
         onClick={async () => {
+          await qc.cancelQueries();
+          qc.clear();
           await supabase.auth.signOut();
-          navigate({ to: "/auth" });
+          navigate({ to: "/auth", replace: true });
         }}
         className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
       >
@@ -125,8 +140,10 @@ export function AppShell({ children }: { children: ReactNode }) {
       </Button>
     </div>
   );
+  if (!canAccess(access.data?.profile.approval_status)) return <AccountAccess status={access.data?.profile.approval_status} requested={access.data?.profile.requested_at} loading={access.isPending} refresh={() => { void access.refetch(); }} />;
   return (
     <div className="flex min-h-screen">
+      <ActivityTracker />
       <QueueWorker onTick={setLastTick} />
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col justify-between border-r border-sidebar-border bg-sidebar p-4 md:flex">
         <div className="space-y-6">{Brand}{Nav}</div>

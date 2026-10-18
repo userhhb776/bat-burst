@@ -19,4 +19,6 @@
 - Contacts group extraction uses GroupContactsDialog with a pure prepareGroupContacts mapper — preserves existing Connections behavior and makes deduplication testable.
 - Device notifications use `src/lib/notify.ts` with a notification-only `public/notify-sw.js` (no caching), registered only outside preview — Android requires a SW to show notifications.
 - Audio script steps store private storage paths in `script_steps.audio_urls`; processQueue signs a URL at send time — the bucket cannot be public.
-- Sign-up is disabled; the app is single-user and only the login form exists.
+- Signup creates a pending profile; approval is enforced by restrictive RLS and requireApprovedAccount on every CRM server function, keeping unapproved users out of data and Evolution operations.
+- Administrator roles live in user_roles; ACESS reads and decisions validate the role server-side, never from account metadata or browser storage.
+- Audit discrete navigation, debounced searches, button actions and database mutations; reports paginate on demand and never capture credentials or external device activity.

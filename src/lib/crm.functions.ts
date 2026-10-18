@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireApprovedAccount } from "@/lib/access.functions";
 import { evo, EvolutionError, isNoWhatsappError, mapState } from "@/server/evolution.server";
 import { buildSchedule, createBalancedPicker, normalizePhone, renderMessage, type Cadence } from "@/lib/crm";
 
@@ -7,7 +7,7 @@ const slug = (s: string) =>
   s.toLowerCase().normalize("NFD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 20) || "inst";
 
 export const createInstance = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireApprovedAccount])
   .inputValidator((d: { name: string }) => d)
   .handler(async ({ data, context }) => {
     const instanceName = `${slug(data.name)}-${context.userId.slice(0, 6)}-${Math.random().toString(36).slice(2, 6)}`;
@@ -31,7 +31,7 @@ async function ownInstance(supabase: any, id: string) {
 }
 
 export const connectInstance = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireApprovedAccount])
   .inputValidator((d: { id: string; number?: string }) => d)
   .handler(async ({ data, context }) => {
     const inst = await ownInstance(context.supabase, data.id);
@@ -46,7 +46,7 @@ export const connectInstance = createServerFn({ method: "POST" })
   });
 
 export const refreshInstances = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireApprovedAccount])
   .handler(async ({ context }) => {
     const { data: list } = await context.supabase.from("instances").select("*");
     const out: Record<string, string> = {};
@@ -65,7 +65,7 @@ export const refreshInstances = createServerFn({ method: "POST" })
   });
 
 export const logoutInstance = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireApprovedAccount])
   .inputValidator((d: { id: string }) => d)
   .handler(async ({ data, context }) => {
     const inst = await ownInstance(context.supabase, data.id);
@@ -79,7 +79,7 @@ export const logoutInstance = createServerFn({ method: "POST" })
   });
 
 export const deleteInstance = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireApprovedAccount])
   .inputValidator((d: { id: string }) => d)
   .handler(async ({ data, context }) => {
     const inst = await ownInstance(context.supabase, data.id);
@@ -99,7 +99,7 @@ export type GroupInfo = {
 };
 
 export const fetchGroups = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireApprovedAccount])
   .inputValidator((d: { id: string }) => d)
   .handler(async ({ data, context }): Promise<GroupInfo[]> => {
     const inst = await ownInstance(context.supabase, data.id);
@@ -129,7 +129,7 @@ function isServerAsleep(e: unknown) {
 }
 
 export const startCampaign = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireApprovedAccount])
   .inputValidator((d: CampaignInput) => d)
   .handler(async ({ data, context }) => {
     const sb = context.supabase;
@@ -199,7 +199,7 @@ export const startCampaign = createServerFn({ method: "POST" })
 
 /** Sends due messages for the signed-in user's running campaigns. */
 export const processQueue = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireApprovedAccount])
   .handler(async ({ context }) => {
     const sb = context.supabase;
     const { data: due } = await sb
@@ -301,7 +301,7 @@ export const processQueue = createServerFn({ method: "POST" })
 
 /** Checks recent conversations for replies after our messages were sent. */
 export const syncReplies = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireApprovedAccount])
   .handler(async ({ context }) => {
     const sb = context.supabase;
     const since = new Date(Date.now() - 7 * 86400_000).toISOString();
