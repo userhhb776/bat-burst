@@ -1,5 +1,5 @@
 # Tasks
-- [ ] Notify the principal account of new approval requests while the app is open; verify authorization and delivery flow
+- [x] Notify the principal account of new approval requests while the app is open; real signup/request alert verified in ACESS, physical phone delivery requires permission on published app
 - [x] Restore approval controls for pending accounts without an explicit request; verify owner access
 - [x] Bat Burst identity, group extraction
 - [x] Smarter risk meter, removed PACK - TESTE and batch insert
