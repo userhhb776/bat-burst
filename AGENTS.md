@@ -24,3 +24,4 @@
 - Administrator roles live in user_roles; ACESS reads and decisions validate the role server-side, never from account metadata or browser storage.
 - ACESS reviews any pending account, independently of its request timestamp, while preventing decisions on administrator accounts — keeps existing accounts manageable.
 - Audit discrete navigation, debounced searches, button actions and database mutations; reports paginate on demand and never capture credentials or external device activity.
+- AI assistant calls Ollama Cloud only via askAssistant in src/lib/assistant.functions.ts (approved accounts, OLLAMA_API_KEY server-side; model via optional OLLAMA_MODEL) — swapping keys/models needs no code change.
