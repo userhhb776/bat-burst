@@ -16,6 +16,7 @@ import { AccountAccess } from "@/components/AccountAccess";
 import { ActivityTracker } from "@/components/ActivityTracker";
 import { canAccess } from "@/lib/access";
 import { ApprovalRequestNotifications } from "@/components/ApprovalRequestNotifications";
+import { AiAssistant } from "@/components/AiAssistant";
 
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -147,6 +148,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <ActivityTracker />
       {access.data?.admin && <ApprovalRequestNotifications key={access.data.profile.id} />}
       <QueueWorker onTick={setLastTick} />
+      <AiAssistant />
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col justify-between border-r border-sidebar-border bg-sidebar p-4 md:flex">
         <div className="space-y-6">{Brand}{Nav}</div>
         {Footer}
