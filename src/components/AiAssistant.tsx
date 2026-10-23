@@ -10,6 +10,15 @@ import { cn } from "@/lib/utils";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
+function formatText(t: string) {
+  const clean = t.replace(/^#{1,6}\s+/gm, "").replace(/^\s*[*-]\s+/gm, "• ");
+  return clean.split(/(\*\*[^*]+\*\*)/g).map((p, i) =>
+    p.startsWith("**") && p.endsWith("**") && p.length > 4
+      ? <strong key={i}>{p.slice(2, -2)}</strong>
+      : p.replace(/\*\*/g, "").replace(/(^|\s)\*([^*\n]+)\*/g, "$1$2"),
+  );
+}
+
 const QUICK = [
   "Gere 5 variações em Spintax para uma mensagem de primeiro contato",
   "Dicas para evitar bloqueio do WhatsApp",
@@ -66,7 +75,7 @@ export function AiAssistant() {
             </div>
           )}
           {msgs.map((m, i) => (
-            <div key={i} className={cn("max-w-[90%] whitespace-pre-wrap rounded-lg px-3 py-2 text-sm", m.role === "user" ? "ml-auto bg-primary text-primary-foreground" : "bg-muted text-foreground")}>{m.content}</div>
+            <div key={i} className={cn("max-w-[90%] whitespace-pre-wrap rounded-lg px-3 py-2 text-sm", m.role === "user" ? "ml-auto bg-primary text-primary-foreground" : "bg-muted text-foreground")}>{formatText(m.content)}</div>
           ))}
           {busy && <div className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Pensando…</div>}
           <div ref={end} />

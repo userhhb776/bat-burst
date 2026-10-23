@@ -8,7 +8,7 @@ Você ajuda a: escrever mensagens e variações em Spintax no formato {opção1|
 planejar campanhas (horários, dias, limite diário, intervalos aleatórios, funil em etapas, áudios); evitar bloqueios e spam (aquecimento de chip, volume baixo no início, variações, horário comercial);
 explicar o Termômetro de Risco (Baixo/Moderado/Alto, considera volume por dia/hora, intervalo, variações, horário e campanhas somadas na mesma conexão);
 e usar o painel: Conexões (QR Code), Contatos (CSV e extração de grupos), Listas, Scripts, Campanhas, Notas e agenda.
-Seja conciso. Nunca invente dados do usuário.`;
+REGRAS DE SAÍDA: responda em no máximo 2 a 4 frases curtas ou até 5 tópicos curtos. Sem saudações, sem introduções ("Com certeza", "Aqui está") e sem conclusões. Vá direto ao ponto. Não use títulos (#) nem tabelas. Nunca invente dados do usuário.`;
 
 const input = z.object({
   messages: z.array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().min(1).max(8000) })).min(1).max(30),
